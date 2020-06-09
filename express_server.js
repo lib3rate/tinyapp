@@ -40,6 +40,16 @@ app.post('/urls', (req, res) => {
   res.redirect(`/u/${newShortUrl}`);
 });
 
+app.post('/urls/:shortURL', (req, res) => {
+  const urltoUpdate = req.params.shortURL;
+  let newLongUrl = req.body.longURL;
+  urlDatabase[urltoUpdate] = newLongUrl;
+  // console.log(urlDatabase);
+  // console.log(req.body);
+  // console.log(req.params.shortURL);
+  res.redirect('/urls');
+});
+
 app.post('/urls/:shortURL/delete', (req, res) => {
   // console.log(req.body);
   let urlToDelete = req.body.shortURL;
@@ -47,10 +57,10 @@ app.post('/urls/:shortURL/delete', (req, res) => {
   res.redirect('/urls');
 });
 
-// app.get('/urls/:shortURL', (req, res) => {
-//   let templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
-//   res.render('urls_show', templateVars);
-// });
+app.get('/urls/:shortURL', (req, res) => {
+  let templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
+  res.render('urls_show', templateVars);
+});
 
 app.get('/u/:shortURL', (req, res) => {
   // console.log(req.params);
@@ -58,9 +68,9 @@ app.get('/u/:shortURL', (req, res) => {
   res.redirect(longURL);
 });
 
-// app.get('/hello', (req, res) => {
-//   res.send('<html><body>Hello <b>World</b></body></html>\n');
-// });
+app.get('/hello', (req, res) => {
+  res.send('<html><body>Hello <b>World</b></body></html>\n');
+});
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
