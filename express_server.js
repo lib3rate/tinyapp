@@ -49,10 +49,10 @@ const findUserById = (user_id) => {
   return false;
 };
 
-const checkUserByEmail = (email) => {
+const findUserByEmail = (email) => {
   for (let user in users) {
     if (users[user].email === email) {
-      return true;
+      return users[user];
     }
   }
   return false;
@@ -128,22 +128,34 @@ app.post('/register', (req, res) => {
   const password = req.body.password;
   if (email === '' || password === '') {
     res.status(400).send('Email or password are empty')
-  } else if (checkUserByEmail(email)) {
+  } else if (findUserByEmail(email)) {
     res.status(400).send('User is already registered')
   } else {
     const user = createUser(userId, email, password);
-  }
+  };
   // const templateVars = { user };
   res.cookie('user_id', userId);
   res.redirect('/urls'); // Do we need to pass templateVars here?
 });
 
+// Logging an existing user in
+
 app.post('/login', (req, res) => {
-  res.cookie('username', req.body.username);
-  res.redirect('/urls');
+  const email = req.body.email;
+  const password = req.body.password;
+  const user = findUserByEmail(email);
+  if (!user) {
+    res.status(403).send('User with the provided email cannot be found, please register')
+  } else if (password !== user.password) {
+    res.status(403).send('Passwords do not match')
+  } else {
+    const userId = user.id;
+    res.cookie('user_id', userId);
+    res.redirect('/urls');
+  };
 });
 
-// Clearing the cookies and redirecting to the main page with the list of URLs
+// Clearing the cookies and redirecting to the main page with the list of URLs on logout
 
 app.post('/logout', (req, res) => {
   res.clearCookie('user_id');
