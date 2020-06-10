@@ -1,4 +1,4 @@
-const PORT = 8080; // default port 8080
+const PORT = 8080;
 const express = require('express');
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
@@ -14,11 +14,31 @@ const urlDatabase = {
   '9sm5xK': 'http://www.google.com'
 };
 
-function generateRandomString() {
+const users = { 
+  "userRandomID": {
+    id: "userRandomID", 
+    email: "user@example.com", 
+    password: "purple-monkey-dinosaur"
+  },
+ "user2RandomID": {
+    id: "user2RandomID", 
+    email: "user2@example.com", 
+    password: "dishwasher-funk"
+  }
+};
+
+const generateRandomString = () => {
   return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
 };
 
-// console.log(generateRandomString());
+const createUser = (id, email, password) => {
+  users[id] = {
+    id,
+    email,
+    password,
+  }
+  return users[id];
+};
 
 app.get('/', (req, res) => {
   res.send('Hello!');
@@ -26,6 +46,10 @@ app.get('/', (req, res) => {
 
 app.get('/hello', (req, res) => {
   res.send('<html><body>Hello <b>World</b></body></html>\n');
+});
+
+app.get('/register', (req, res) => {
+  res.render('registration');
 });
 
 app.get('/urls', (req, res) => {
@@ -55,6 +79,16 @@ app.get('/urls/:shortURL', (req, res) => {
 app.get('/u/:shortURL', (req, res) => {
   const longURL = urlDatabase[req.params.shortURL];
   res.redirect(longURL);
+});
+
+app.post('/register', (req, res) => {
+  const id = generateRandomString();
+  const email = req.body.email;
+  const password = req.body.password;
+  const newUser = createUser(id, email, password);
+  res.cookie('id', id);
+  // console.log(users);
+  res.redirect('/urls');
 });
 
 app.post('/login', (req, res) => {
@@ -88,5 +122,5 @@ app.post('/urls/:shortURL/delete', (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}!`);
+  console.log(`We are listening to you on port ${PORT}!`);
 });
