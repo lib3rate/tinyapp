@@ -40,6 +40,15 @@ const createUser = (id, email, password) => {
   return users[id];
 };
 
+const findUserById = (user_id) => {
+  for (let userId in users) {
+    if (users[userId].email === [user_id].email) {
+      return userId;
+    }
+  }
+  return false;
+};
+
 app.get('/', (req, res) => {
   res.send('Hello!');
 });
@@ -52,10 +61,18 @@ app.get('/register', (req, res) => {
   res.render('registration');
 });
 
+// Access the general webpage with a list of all the added URLs
+
 app.get('/urls', (req, res) => {
+  console.log(req.cookies);
+  const userId = req.cookies['user_Id'];
+  console.log(userId);
+  const user = findUserById(userId);
+  console.log(user);
   let templateVars = {
     urls: urlDatabase,
-    username: req.cookies["username"]
+    // username: req.cookies["username"]
+    user,
   };
   res.render('urls_index', templateVars);
 });
@@ -81,14 +98,16 @@ app.get('/u/:shortURL', (req, res) => {
   res.redirect(longURL);
 });
 
+// Registering a new user
+
 app.post('/register', (req, res) => {
   const id = generateRandomString();
   const email = req.body.email;
   const password = req.body.password;
-  const newUser = createUser(id, email, password);
-  res.cookie('id', id);
-  // console.log(users);
-  res.redirect('/urls');
+  const user = createUser(id, email, password);
+  const templateVars = { user };
+  res.cookie('user_id', id);
+  res.redirect('/urls'); // Add templateVars
 });
 
 app.post('/login', (req, res) => {
