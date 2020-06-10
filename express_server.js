@@ -9,9 +9,14 @@ app.set('view engine', 'ejs')
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieParser());
 
+// const urlDatabase = {
+//   'b2xVn2': 'http://www.lighthouselabs.ca',
+//   '9sm5xK': 'http://www.google.com'
+// };
+
 const urlDatabase = {
-  'b2xVn2': 'http://www.lighthouselabs.ca',
-  '9sm5xK': 'http://www.google.com'
+  b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW" },
+  i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW" }
 };
 
 const users = { 
@@ -66,19 +71,19 @@ app.get('/hello', (req, res) => {
   res.send('<html><body>Hello <b>World</b></body></html>\n');
 });
 
-// Access the registration page
+// Accessing the registration page
 
 app.get('/register', (req, res) => {
   res.render('registration');
 });
 
-// Access the login page
+// Accessing the login page
 
 app.get('/login', (req, res) => {
   res.render('login');
 });
 
-// Access the general webpage with a list of all the added URLs
+// Accessing the general webpage with a list of all the added URLs
 
 app.get('/urls', (req, res) => {
   const userId = req.cookies['user_id'];
@@ -91,27 +96,27 @@ app.get('/urls', (req, res) => {
   res.render('urls_index', templateVars);
 });
 
-// Access the page with an interface to create a new short URL
+// Accessing the page with an interface to create a new short URL
 
 app.get('/urls/new', (req, res) => {
   const userId = req.cookies['user_id'];
   const user = findUserById(userId);
   if (!user) {
     res.redirect('/login')
-  }  
+  };
   let templateVars = { user };
   res.cookie('user_id', userId);
   res.render('urls_new', templateVars);
 });
 
-// Access the page with information on the short URL
+// Accessing the page with information on the short URL
 
 app.get('/urls/:shortURL', (req, res) => {
   const userId = req.cookies['user_id'];
   const user = findUserById(userId);
   let templateVars = {
     shortURL: req.params.shortURL,
-    longURL: urlDatabase[req.params.shortURL],
+    longURL: urlDatabase[req.params.shortURL].longURL,
     user,
   };
   res.cookie('user_id', userId);
@@ -121,7 +126,7 @@ app.get('/urls/:shortURL', (req, res) => {
 // Redirecting to an external website with the long URL
 
 app.get('/u/:shortURL', (req, res) => {
-  const longURL = urlDatabase[req.params.shortURL];
+  const longURL = urlDatabase[req.params.shortURL].longURL;
   res.redirect(longURL);
 });
 
@@ -138,9 +143,8 @@ app.post('/register', (req, res) => {
   } else {
     const user = createUser(userId, email, password);
   };
-  // const templateVars = { user };
   res.cookie('user_id', userId);
-  res.redirect('/urls'); // Do we need to pass templateVars here?
+  res.redirect('/urls');
 });
 
 // Logging an existing user in
@@ -172,17 +176,21 @@ app.post('/logout', (req, res) => {
 app.post('/urls/:shortURL', (req, res) => {
   const urltoUpdate = req.params.shortURL;
   let newLongUrl = req.body.longURL;
-  urlDatabase[urltoUpdate] = newLongUrl;
+  urlDatabase[urltoUpdate].longURL = newLongUrl;
   res.redirect('/urls');
 });
 
 // Adding a new short URL to the database
 
 app.post('/urls', (req, res) => {
-  let newLongUrl = req.body.longURL;
-  let newShortUrl = generateRandomString();
-  urlDatabase[newShortUrl] = newLongUrl;
-  res.redirect(`/u/${newShortUrl}`);
+  const newLongUrl = req.body.longURL;
+  const newShortUrl = generateRandomString();
+  const userId = req.cookies['user_id'];
+  urlDatabase[newShortUrl] = {
+    longURL: newLongUrl,
+    userID: userId
+  };
+  res.redirect(`/urls/${newShortUrl}`);
 });
 
 // Removing an existing short URL from the database
