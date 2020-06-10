@@ -9,11 +9,6 @@ app.set('view engine', 'ejs')
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieParser());
 
-// const urlDatabase = {
-//   'b2xVn2': 'http://www.lighthouselabs.ca',
-//   '9sm5xK': 'http://www.google.com'
-// };
-
 const urlDatabase = {
   b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW" },
   i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW" }
@@ -45,7 +40,7 @@ const createUser = (id, email, password) => {
   return users[id];
 };
 
-const findUserById = (user_id) => {
+const findUserById = user_id => {
   for (let user in users) {
     if (users[user].id === user_id) {
       return users[user];
@@ -54,13 +49,23 @@ const findUserById = (user_id) => {
   return false;
 };
 
-const findUserByEmail = (email) => {
+const findUserByEmail = email => {
   for (let user in users) {
     if (users[user].email === email) {
       return users[user];
     }
   }
   return false;
+};
+
+const urlsForUser = id => {
+  const urlsToShow = {};
+  for (let shortUrl in urlDatabase) {
+    if (urlDatabase[shortUrl].userID === id) {
+      urlsToShow[shortUrl] = urlDatabase[shortUrl];
+    }
+  }
+  return urlsToShow;
 };
 
 app.get('/', (req, res) => {
@@ -88,8 +93,14 @@ app.get('/login', (req, res) => {
 app.get('/urls', (req, res) => {
   const userId = req.cookies['user_id'];
   const user = findUserById(userId);
+  if (!user) {
+   res.send('Please login or register to view the list of URLs') 
+  }
+  const urlsToShow = urlsForUser(userId);
+  console.log(userId);
+  console.log(urlsToShow);
   let templateVars = {
-    urls: urlDatabase,
+    urls: urlsToShow,
     user,
   };
   res.cookie('user_id', userId);
@@ -139,7 +150,7 @@ app.post('/register', (req, res) => {
   if (email === '' || password === '') {
     res.status(400).send('Email or password are empty')
   } else if (findUserByEmail(email)) {
-    res.status(400).send('User is already registered')
+    res.status(400).send('User with the provided email is already registered')
   } else {
     const user = createUser(userId, email, password);
   };
