@@ -96,10 +96,15 @@ app.get('/urls', (req, res) => {
 app.get('/urls/new', (req, res) => {
   const userId = req.cookies['user_id'];
   const user = findUserById(userId);
+  if (!user) {
+    res.redirect('/login')
+  }  
   let templateVars = { user };
   res.cookie('user_id', userId);
   res.render('urls_new', templateVars);
 });
+
+// Access the page with information on the short URL
 
 app.get('/urls/:shortURL', (req, res) => {
   const userId = req.cookies['user_id'];
@@ -162,6 +167,8 @@ app.post('/logout', (req, res) => {
   res.redirect('/urls');
 });
 
+// Updating a short URL with a new long URL
+
 app.post('/urls/:shortURL', (req, res) => {
   const urltoUpdate = req.params.shortURL;
   let newLongUrl = req.body.longURL;
@@ -169,12 +176,16 @@ app.post('/urls/:shortURL', (req, res) => {
   res.redirect('/urls');
 });
 
+// Adding a new short URL to the database
+
 app.post('/urls', (req, res) => {
   let newLongUrl = req.body.longURL;
   let newShortUrl = generateRandomString();
   urlDatabase[newShortUrl] = newLongUrl;
   res.redirect(`/u/${newShortUrl}`);
 });
+
+// Removing an existing short URL from the database
 
 app.post('/urls/:shortURL/delete', (req, res) => {
   let urlToDelete = req.body.shortURL;
