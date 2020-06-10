@@ -41,9 +41,18 @@ const createUser = (id, email, password) => {
 };
 
 const findUserById = (user_id) => {
-  for (let userId in users) {
-    if (users[userId].email === [user_id].email) {
-      return userId;
+  for (let user in users) {
+    if (users[user].id === user_id) {
+      return users[user];
+    }
+  }
+  return false;
+};
+
+const checkUserByEmail = (email) => {
+  for (let user in users) {
+    if (users[user].email === email) {
+      return true;
     }
   }
   return false;
@@ -64,34 +73,37 @@ app.get('/register', (req, res) => {
 // Access the general webpage with a list of all the added URLs
 
 app.get('/urls', (req, res) => {
-  console.log(req.cookies);
-  const userId = req.cookies['user_Id'];
-  console.log(userId);
+  const userId = req.cookies['user_id'];
   const user = findUserById(userId);
-  console.log(user);
   let templateVars = {
     urls: urlDatabase,
-    // username: req.cookies["username"]
     user,
   };
+  res.cookie('user_id', userId);
   res.render('urls_index', templateVars);
 });
 
 app.get('/urls/new', (req, res) => {
-  let templateVars = {
-    username: req.cookies["username"]
-  };
+  const userId = req.cookies['user_id'];
+  const user = findUserById(userId);
+  let templateVars = { user };
+  res.cookie('user_id', userId);
   res.render('urls_new', templateVars);
 });
 
 app.get('/urls/:shortURL', (req, res) => {
+  const userId = req.cookies['user_id'];
+  const user = findUserById(userId);
   let templateVars = {
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL],
-    username: req.cookies["username"]
+    user,
   };
+  res.cookie('user_id', userId);
   res.render('urls_show', templateVars);
 });
+
+// Redirecting to an external website with the long URL
 
 app.get('/u/:shortURL', (req, res) => {
   const longURL = urlDatabase[req.params.shortURL];
@@ -101,13 +113,19 @@ app.get('/u/:shortURL', (req, res) => {
 // Registering a new user
 
 app.post('/register', (req, res) => {
-  const id = generateRandomString();
+  const userId = generateRandomString();
   const email = req.body.email;
   const password = req.body.password;
-  const user = createUser(id, email, password);
-  const templateVars = { user };
-  res.cookie('user_id', id);
-  res.redirect('/urls'); // Add templateVars
+  if (email === '' || password === '') {
+    res.status(400).send('Email or password are empty')
+  } else if (checkUserByEmail(email)) {
+    res.status(400).send('User is already registered')
+  } else {
+    const user = createUser(userId, email, password);
+  }
+  // const templateVars = { user };
+  res.cookie('user_id', userId);
+  res.redirect('/urls'); // Do we need to pass templateVars here?
 });
 
 app.post('/login', (req, res) => {
@@ -115,8 +133,10 @@ app.post('/login', (req, res) => {
   res.redirect('/urls');
 });
 
+// Clearing the cookies and redirecting to the main page with the list of URLs
+
 app.post('/logout', (req, res) => {
-  res.clearCookie('username');
+  res.clearCookie('user_id');
   res.redirect('/urls');
 });
 
