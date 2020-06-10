@@ -97,8 +97,6 @@ app.get('/urls', (req, res) => {
    res.send('Please login or register to view the list of URLs') 
   }
   const urlsToShow = urlsForUser(userId);
-  console.log(userId);
-  console.log(urlsToShow);
   let templateVars = {
     urls: urlsToShow,
     user,
@@ -123,15 +121,22 @@ app.get('/urls/new', (req, res) => {
 // Accessing the page with information on the short URL
 
 app.get('/urls/:shortURL', (req, res) => {
+  const shortURL = req.params.shortURL;
   const userId = req.cookies['user_id'];
   const user = findUserById(userId);
-  let templateVars = {
-    shortURL: req.params.shortURL,
-    longURL: urlDatabase[req.params.shortURL].longURL,
-    user,
-  };
-  res.cookie('user_id', userId);
-  res.render('urls_show', templateVars);
+  const urlsToShow = Object.keys(urlsForUser(userId));
+  for (let url of urlsToShow) {
+    if (url === shortURL) {
+      let templateVars = {
+        shortURL: req.params.shortURL,
+        longURL: urlDatabase[req.params.shortURL].longURL,
+        user,
+      };
+      res.cookie('user_id', userId);
+      res.render('urls_show', templateVars);
+    }
+  }
+  res.send('You do not have permission to view this page');
 });
 
 // Redirecting to an external website with the long URL
@@ -152,7 +157,7 @@ app.post('/register', (req, res) => {
   } else if (findUserByEmail(email)) {
     res.status(400).send('User with the provided email is already registered')
   } else {
-    const user = createUser(userId, email, password);
+    createUser(userId, email, password);
   };
   res.cookie('user_id', userId);
   res.redirect('/urls');
