@@ -66,8 +66,16 @@ app.get('/hello', (req, res) => {
   res.send('<html><body>Hello <b>World</b></body></html>\n');
 });
 
+// Access the registration page
+
 app.get('/register', (req, res) => {
   res.render('registration');
+});
+
+// Access the login page
+
+app.get('/login', (req, res) => {
+  res.render('login');
 });
 
 // Access the general webpage with a list of all the added URLs
@@ -82,6 +90,8 @@ app.get('/urls', (req, res) => {
   res.cookie('user_id', userId);
   res.render('urls_index', templateVars);
 });
+
+// Access the page with an interface to create a new short URL
 
 app.get('/urls/new', (req, res) => {
   const userId = req.cookies['user_id'];
