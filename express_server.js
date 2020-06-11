@@ -59,10 +59,10 @@ const findUserById = user_id => {
   return false;
 };
 
-const findUserByEmail = email => {
-  for (let user in users) {
-    if (users[user].email === email) {
-      return users[user];
+const findUserByEmail = (email, userDatabase) => {
+  for (let user in userDatabase) {
+    if (userDatabase[user].email === email) {
+      return userDatabase[user];
     }
   }
   return false;
@@ -174,7 +174,7 @@ app.post('/register', (req, res) => {
   const password = req.body.password;
   if (email === '' || password === '') {
     res.status(400).send('Email or password are empty')
-  } else if (findUserByEmail(email)) {
+  } else if (findUserByEmail(email, users)) {
     res.status(400).send('User with the provided email is already registered')
   } else {
     createUser(userId, email, bcrypt.hashSync(password, 10));
@@ -188,7 +188,7 @@ app.post('/register', (req, res) => {
 app.post('/login', (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
-  const user = findUserByEmail(email);
+  const user = findUserByEmail(email, users);
   if (!user) {
     res.status(403).send('User with the provided email cannot be found, please register')
   } else if (!bcrypt.compareSync(password, user.password)) {
