@@ -10,26 +10,31 @@ app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieParser());
 
 const urlDatabase = {
-  b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW" },
-  i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW" }
+  b6UTxQ: { longURL: "https://www.tsn.ca", userID: "7c2j6a" },
+  i3BoGr: { longURL: "https://www.google.ca", userID: "20h42g" },
+  g9536a: { longURL: "https://www.lighthouselabs.ca", userID: "6e1a50" },
 };
 
 const users = { 
   "Bob": {
-    id: "userRandomID", 
-    email: "user@example.com", 
+    id: "7c2j6a",
+    email: "bob@example.com",
     password: "purple-monkey-dinosaur"
   },
  "John": {
-    id: "user2RandomID", 
-    email: "user2@example.com", 
+    id: "20h42g",
+    email: "john@example.com",
     password: "dishwasher-funk"
-  }
+  },
+  "Caleb": {
+    id: "6e1a50",
+    email: "caleb@example.com",
+    password: "qwer"
+  },
 };
 
 const generateRandomString = () => {
   return Math.random().toString(20).substring(2, 8);
-  // return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
 };
 
 const createUser = (id, email, password) => {
@@ -143,8 +148,14 @@ app.get('/urls/:shortURL', (req, res) => {
 // Redirecting to an external website with the long URL
 
 app.get('/u/:shortURL', (req, res) => {
-  const longURL = urlDatabase[req.params.shortURL].longURL;
-  res.redirect(longURL);
+  const shortURL = req.params.shortURL;
+  for (let url of Object.keys(urlDatabase)) {
+    if (url === shortURL) {
+      const longURL = urlDatabase[req.params.shortURL].longURL;
+      res.redirect(longURL);
+    }
+  }
+  res.send('The requested URL does not exist')
 });
 
 // Registering a new user
