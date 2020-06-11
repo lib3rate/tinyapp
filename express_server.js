@@ -5,6 +5,14 @@ const cookieSession = require('cookie-session');
 const bcrypt = require('bcrypt');
 const app = express();
 
+const {
+  generateRandomString,
+  createUser,
+  findUserById,
+  findUserByEmail,
+  urlsForUser
+} = require('./helpers');
+
 app.set('view engine', 'ejs')
 
 app.use(bodyParser.urlencoded({extended: true}));
@@ -37,47 +45,6 @@ const users = {
   },
 };
 
-const generateRandomString = () => {
-  return Math.random().toString(20).substring(2, 8);
-};
-
-const createUser = (id, email, password) => {
-  users[id] = {
-    id,
-    email,
-    password,
-  }
-  return users[id];
-};
-
-const findUserById = user_id => {
-  for (let user in users) {
-    if (users[user].id === user_id) {
-      return users[user];
-    }
-  }
-  return false;
-};
-
-const findUserByEmail = (email, userDatabase) => {
-  for (let user in userDatabase) {
-    if (userDatabase[user].email === email) {
-      return userDatabase[user];
-    }
-  }
-  return false;
-};
-
-const urlsForUser = id => {
-  const urlsToShow = {};
-  for (let shortUrl in urlDatabase) {
-    if (urlDatabase[shortUrl].userID === id) {
-      urlsToShow[shortUrl] = urlDatabase[shortUrl];
-    }
-  }
-  return urlsToShow;
-};
-
 // Accessing the welcome page
 
 app.get('/', (req, res) => {
@@ -106,12 +73,12 @@ app.get('/login', (req, res) => {
 
 app.get('/urls', (req, res) => {
   const userId = req.session.user_id;
-  const user = findUserById(userId);
+  const user = findUserById(userId, users);
   if (!user) {
    res.send('Please login or register to view the list of URLs');
    return;
   }
-  const urlsToShow = urlsForUser(userId);
+  const urlsToShow = urlsForUser(userId, urlDatabase);
   let templateVars = {
     urls: urlsToShow,
     user,
@@ -123,7 +90,7 @@ app.get('/urls', (req, res) => {
 
 app.get('/urls/new', (req, res) => {
   const userId = req.session.user_id;
-  const user = findUserById(userId);
+  const user = findUserById(userId, users);
   if (!user) {
     res.redirect('/login')
   };
@@ -136,8 +103,8 @@ app.get('/urls/new', (req, res) => {
 app.get('/urls/:shortURL', (req, res) => {
   const shortURL = req.params.shortURL;
   const userId = req.session.user_id;
-  const user = findUserById(userId);
-  const listOfUserUrls = Object.keys(urlsForUser(userId));
+  const user = findUserById(userId, users);
+  const listOfUserUrls = Object.keys(urlsForUser(userId, urlDatabase));
   for (let url of listOfUserUrls) {
     if (url === shortURL) {
       let templateVars = {
@@ -177,7 +144,7 @@ app.post('/register', (req, res) => {
   } else if (findUserByEmail(email, users)) {
     res.status(400).send('User with the provided email is already registered')
   } else {
-    createUser(userId, email, bcrypt.hashSync(password, 10));
+    createUser(userId, email, bcrypt.hashSync(password, 10), users);
     req.session.user_id = userId;
     res.redirect('/urls');
   };
@@ -213,7 +180,7 @@ app.post('/urls/:shortURL', (req, res) => {
   const shortUrlToUpdate = req.params.shortURL;
   const newLongUrl = req.body.longURL;
   const userId = req.session.user_id;
-  const listOfUserUrls = Object.keys(urlsForUser(userId));
+  const listOfUserUrls = Object.keys(urlsForUser(userId, urlDatabase));
   for (let url of listOfUserUrls) {
     if (url === shortUrlToUpdate) {
       urlDatabase[shortUrlToUpdate].longURL = newLongUrl;
@@ -242,7 +209,7 @@ app.post('/urls', (req, res) => {
 app.post('/urls/:shortURL/delete', (req, res) => {
   let urlToDelete = req.params.shortURL;
   const userId = req.session.user_id;
-  const listOfUserUrls = Object.keys(urlsForUser(userId));
+  const listOfUserUrls = Object.keys(urlsForUser(userId, urlDatabase));
   for (let url of listOfUserUrls) {
     if (url === urlToDelete) {
       delete urlDatabase[urlToDelete];
