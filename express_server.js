@@ -1,14 +1,17 @@
 const PORT = 8080;
 const express = require('express');
 const bodyParser = require('body-parser');
-const cookieParser = require('cookie-parser');
+const cookieSession = require('cookie-session');
 const bcrypt = require('bcrypt');
 const app = express();
 
 app.set('view engine', 'ejs')
 
 app.use(bodyParser.urlencoded({extended: true}));
-app.use(cookieParser());
+app.use(cookieSession({
+  name: 'session',
+  keys: ['key1', 'key2']
+}));
 
 const urlDatabase = {
   b6UTxQ: { longURL: "https://www.tsn.ca", userID: "7c2j6a" },
@@ -75,9 +78,13 @@ const urlsForUser = id => {
   return urlsToShow;
 };
 
+// Accessing the welcome page
+
 app.get('/', (req, res) => {
   res.send('Hello!');
 });
+
+// Accessing the happy page
 
 app.get('/hello', (req, res) => {
   res.send('<html><body>Hello <b>World</b></body></html>\n');
@@ -98,7 +105,7 @@ app.get('/login', (req, res) => {
 // Accessing the general webpage with a list of all the added URLs
 
 app.get('/urls', (req, res) => {
-  const userId = req.cookies['user_id'];
+  const userId = req.session.user_id;
   const user = findUserById(userId);
   if (!user) {
    res.send('Please login or register to view the list of URLs');
@@ -115,7 +122,7 @@ app.get('/urls', (req, res) => {
 // Accessing the page with an interface to create a new short URL
 
 app.get('/urls/new', (req, res) => {
-  const userId = req.cookies['user_id'];
+  const userId = req.session.user_id;
   const user = findUserById(userId);
   if (!user) {
     res.redirect('/login')
@@ -128,7 +135,7 @@ app.get('/urls/new', (req, res) => {
 
 app.get('/urls/:shortURL', (req, res) => {
   const shortURL = req.params.shortURL;
-  const userId = req.cookies['user_id'];
+  const userId = req.session.user_id;
   const user = findUserById(userId);
   const listOfUserUrls = Object.keys(urlsForUser(userId));
   for (let url of listOfUserUrls) {
@@ -171,7 +178,7 @@ app.post('/register', (req, res) => {
     res.status(400).send('User with the provided email is already registered')
   } else {
     createUser(userId, email, bcrypt.hashSync(password, 10));
-    res.cookie('user_id', userId);
+    req.session.user_id = userId;
     res.redirect('/urls');
   };
 });
@@ -185,12 +192,10 @@ app.post('/login', (req, res) => {
   if (!user) {
     res.status(403).send('User with the provided email cannot be found, please register')
   } else if (!bcrypt.compareSync(password, user.password)) {
-    // } else if (bcrypt.hashSync(password, 10) !== user.password) {
-    // console.log(bcrypt.hashSync(password, 10));
     res.status(403).send('Passwords do not match')
   } else {
     const userId = user.id;
-    res.cookie('user_id', userId);
+    req.session.user_id = userId;
     res.redirect('/urls');
   };
 });
@@ -198,7 +203,7 @@ app.post('/login', (req, res) => {
 // Clearing the cookies and redirecting to the main page with the list of URLs on logout
 
 app.post('/logout', (req, res) => {
-  res.clearCookie('user_id');
+  req.session = null;
   res.redirect('/urls');
 });
 
@@ -207,12 +212,13 @@ app.post('/logout', (req, res) => {
 app.post('/urls/:shortURL', (req, res) => {
   const shortUrlToUpdate = req.params.shortURL;
   const newLongUrl = req.body.longURL;
-  const userId = req.cookies['user_id'];
+  const userId = req.session.user_id;
   const listOfUserUrls = Object.keys(urlsForUser(userId));
   for (let url of listOfUserUrls) {
     if (url === shortUrlToUpdate) {
       urlDatabase[shortUrlToUpdate].longURL = newLongUrl;
       res.redirect('/urls');
+      return;
     }
   }
   res.send('You do not have permission to view this page');
@@ -223,7 +229,7 @@ app.post('/urls/:shortURL', (req, res) => {
 app.post('/urls', (req, res) => {
   const newLongUrl = req.body.longURL;
   const newShortUrl = generateRandomString();
-  const userId = req.cookies['user_id'];
+  const userId = req.session.user_id;
   urlDatabase[newShortUrl] = {
     longURL: newLongUrl,
     userID: userId
@@ -235,7 +241,7 @@ app.post('/urls', (req, res) => {
 
 app.post('/urls/:shortURL/delete', (req, res) => {
   let urlToDelete = req.params.shortURL;
-  const userId = req.cookies['user_id'];
+  const userId = req.session.user_id;
   const listOfUserUrls = Object.keys(urlsForUser(userId));
   for (let url of listOfUserUrls) {
     if (url === urlToDelete) {
