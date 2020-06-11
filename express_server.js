@@ -101,7 +101,7 @@ app.get('/urls', (req, res) => {
     urls: urlsToShow,
     user,
   };
-  res.cookie('user_id', userId);
+  // res.cookie('user_id', userId);
   res.render('urls_index', templateVars);
 });
 
@@ -114,7 +114,7 @@ app.get('/urls/new', (req, res) => {
     res.redirect('/login')
   };
   let templateVars = { user };
-  res.cookie('user_id', userId);
+  // res.cookie('user_id', userId);
   res.render('urls_new', templateVars);
 });
 
@@ -124,15 +124,15 @@ app.get('/urls/:shortURL', (req, res) => {
   const shortURL = req.params.shortURL;
   const userId = req.cookies['user_id'];
   const user = findUserById(userId);
-  const urlsToShow = Object.keys(urlsForUser(userId));
-  for (let url of urlsToShow) {
+  const listOfUserUrls = Object.keys(urlsForUser(userId));
+  for (let url of listOfUserUrls) {
     if (url === shortURL) {
       let templateVars = {
         shortURL: req.params.shortURL,
         longURL: urlDatabase[req.params.shortURL].longURL,
         user,
       };
-      res.cookie('user_id', userId);
+      // res.cookie('user_id', userId);
       res.render('urls_show', templateVars);
     }
   }
@@ -190,10 +190,17 @@ app.post('/logout', (req, res) => {
 // Updating a short URL with a new long URL
 
 app.post('/urls/:shortURL', (req, res) => {
-  const urltoUpdate = req.params.shortURL;
-  let newLongUrl = req.body.longURL;
-  urlDatabase[urltoUpdate].longURL = newLongUrl;
-  res.redirect('/urls');
+  const shortUrlToUpdate = req.params.shortURL;
+  const newLongUrl = req.body.longURL;
+  const userId = req.cookies['user_id'];
+  const listOfUserUrls = Object.keys(urlsForUser(userId));
+  for (let url of listOfUserUrls) {
+    if (url === shortUrlToUpdate) {
+      urlDatabase[shortUrlToUpdate].longURL = newLongUrl;
+      res.redirect('/urls');
+    }
+  }
+  res.send('You do not have permission to view this page');
 });
 
 // Adding a new short URL to the database
@@ -212,9 +219,16 @@ app.post('/urls', (req, res) => {
 // Removing an existing short URL from the database
 
 app.post('/urls/:shortURL/delete', (req, res) => {
-  let urlToDelete = req.body.shortURL;
-  delete urlDatabase[urlToDelete];
-  res.redirect('/urls');
+  let urlToDelete = req.params.shortURL;
+  const userId = req.cookies['user_id'];
+  const listOfUserUrls = Object.keys(urlsForUser(userId));
+  for (let url of listOfUserUrls) {
+    if (url === urlToDelete) {
+      delete urlDatabase[urlToDelete];
+      res.redirect('/urls');
+    }
+  }
+  res.send('You do not have permission to delete this URL');
 });
 
 app.listen(PORT, () => {
