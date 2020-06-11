@@ -2,6 +2,7 @@ const PORT = 8080;
 const express = require('express');
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
+const bcrypt = require('bcrypt');
 const app = express();
 
 app.set('view engine', 'ejs')
@@ -19,17 +20,17 @@ const users = {
   "Bob": {
     id: "7c2j6a",
     email: "bob@example.com",
-    password: "purple-monkey-dinosaur"
+    password: bcrypt.hashSync("purple-monkey-dinosaur", 10)
   },
  "John": {
     id: "20h42g",
     email: "john@example.com",
-    password: "dishwasher-funk"
+    password: bcrypt.hashSync("dishwasher-funk", 10)
   },
   "Caleb": {
     id: "6e1a50",
     email: "caleb@example.com",
-    password: "qwer"
+    password: bcrypt.hashSync("qwer", 10)
   },
 };
 
@@ -100,14 +101,14 @@ app.get('/urls', (req, res) => {
   const userId = req.cookies['user_id'];
   const user = findUserById(userId);
   if (!user) {
-   res.send('Please login or register to view the list of URLs') 
+   res.send('Please login or register to view the list of URLs');
+   return;
   }
   const urlsToShow = urlsForUser(userId);
   let templateVars = {
     urls: urlsToShow,
     user,
   };
-  // res.cookie('user_id', userId);
   res.render('urls_index', templateVars);
 });
 
@@ -120,7 +121,6 @@ app.get('/urls/new', (req, res) => {
     res.redirect('/login')
   };
   let templateVars = { user };
-  // res.cookie('user_id', userId);
   res.render('urls_new', templateVars);
 });
 
@@ -138,8 +138,8 @@ app.get('/urls/:shortURL', (req, res) => {
         longURL: urlDatabase[req.params.shortURL].longURL,
         user,
       };
-      // res.cookie('user_id', userId);
       res.render('urls_show', templateVars);
+      return;
     }
   }
   res.send('You do not have permission to view this page');
@@ -153,6 +153,7 @@ app.get('/u/:shortURL', (req, res) => {
     if (url === shortURL) {
       const longURL = urlDatabase[req.params.shortURL].longURL;
       res.redirect(longURL);
+      return;
     }
   }
   res.send('The requested URL does not exist')
@@ -169,10 +170,10 @@ app.post('/register', (req, res) => {
   } else if (findUserByEmail(email)) {
     res.status(400).send('User with the provided email is already registered')
   } else {
-    createUser(userId, email, password);
+    createUser(userId, email, bcrypt.hashSync(password, 10));
+    res.cookie('user_id', userId);
+    res.redirect('/urls');
   };
-  res.cookie('user_id', userId);
-  res.redirect('/urls');
 });
 
 // Logging an existing user in
@@ -183,7 +184,9 @@ app.post('/login', (req, res) => {
   const user = findUserByEmail(email);
   if (!user) {
     res.status(403).send('User with the provided email cannot be found, please register')
-  } else if (password !== user.password) {
+  } else if (!bcrypt.compareSync(password, user.password)) {
+    // } else if (bcrypt.hashSync(password, 10) !== user.password) {
+    // console.log(bcrypt.hashSync(password, 10));
     res.status(403).send('Passwords do not match')
   } else {
     const userId = user.id;
@@ -238,11 +241,12 @@ app.post('/urls/:shortURL/delete', (req, res) => {
     if (url === urlToDelete) {
       delete urlDatabase[urlToDelete];
       res.redirect('/urls');
+      return;
     }
   }
   res.send('You do not have permission to delete this URL');
 });
 
 app.listen(PORT, () => {
-  console.log(`We are listening to you on port ${PORT}!`);
+  console.log(`Please know that we are listening on port ${PORT}!`);
 });
