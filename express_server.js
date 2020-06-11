@@ -15,12 +15,12 @@ const urlDatabase = {
 };
 
 const users = { 
-  "userRandomID": {
+  "Bob": {
     id: "userRandomID", 
     email: "user@example.com", 
     password: "purple-monkey-dinosaur"
   },
- "user2RandomID": {
+ "John": {
     id: "user2RandomID", 
     email: "user2@example.com", 
     password: "dishwasher-funk"
@@ -28,7 +28,8 @@ const users = {
 };
 
 const generateRandomString = () => {
-  return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
+  return Math.random().toString(20).substring(2, 8);
+  // return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
 };
 
 const createUser = (id, email, password) => {
