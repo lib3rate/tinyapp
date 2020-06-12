@@ -13,7 +13,11 @@ const {
   urlsForUser
 } = require('./helpers');
 
+// Setting the rendering engine to ejs
+
 app.set('view engine', 'ejs');
+
+// Setting Express to use Body Parser and Cookie Session middleware, as well as their configuration
 
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieSession({
@@ -21,11 +25,15 @@ app.use(cookieSession({
   keys: ['key1', 'key2']
 }));
 
+// Defining the database with the URLs
+
 const urlDatabase = {
   b6UTxQ: { longURL: "https://www.tsn.ca", userID: "7c2j6a" },
   i3BoGr: { longURL: "https://www.google.ca", userID: "20h42g" },
   g9536a: { longURL: "https://www.lighthouselabs.ca", userID: "6e1a50" },
 };
+
+// Defining the user database
 
 const users = {
   "Bob": {
@@ -69,7 +77,7 @@ app.get('/login', (req, res) => {
   res.render('login');
 });
 
-// Accessing the general webpage with a list of all the added URLs
+// Accessing the general webpage with a list of all the added URLs for the current user
 
 app.get('/urls', (req, res) => {
   const userId = req.session.user_id;
@@ -86,19 +94,20 @@ app.get('/urls', (req, res) => {
   res.render('urls_index', templateVars);
 });
 
-// Accessing the page with an interface to create a new short URL
+// Accessing the page with an interface to create a new short URL if the user is logged in
 
 app.get('/urls/new', (req, res) => {
   const userId = req.session.user_id;
   const user = findUserById(userId, users);
   if (!user) {
     res.redirect('/login');
+    return;
   }
   let templateVars = { user };
   res.render('urls_new', templateVars);
 });
 
-// Accessing the page with information on the short URL
+// Accessing the page with information on the short URL belonging to the user
 
 app.get('/urls/:shortURL', (req, res) => {
   const shortURL = req.params.shortURL;
@@ -133,7 +142,7 @@ app.get('/u/:shortURL', (req, res) => {
   res.send('The requested URL does not exist');
 });
 
-// Registering a new user
+// Registering a new user if the form meets the requirements and encrypting the password
 
 app.post('/register', (req, res) => {
   const userId = generateRandomString();
@@ -150,7 +159,7 @@ app.post('/register', (req, res) => {
   }
 });
 
-// Logging an existing user in
+// Checking the credentials and logging the user in
 
 app.post('/login', (req, res) => {
   const email = req.body.email;
@@ -174,7 +183,7 @@ app.post('/logout', (req, res) => {
   res.redirect('/urls');
 });
 
-// Updating a short URL with a new long URL
+// Updating a short URL that belongs to the user with a new long URL
 
 app.post('/urls/:shortURL', (req, res) => {
   const shortUrlToUpdate = req.params.shortURL;
@@ -204,7 +213,7 @@ app.post('/urls', (req, res) => {
   res.redirect(`/urls/${newShortUrl}`);
 });
 
-// Removing an existing short URL from the database
+// Removing an existing short URL belonging to the user from the database
 
 app.post('/urls/:shortURL/delete', (req, res) => {
   let urlToDelete = req.params.shortURL;
@@ -219,6 +228,8 @@ app.post('/urls/:shortURL/delete', (req, res) => {
   }
   res.send('You do not have permission to delete this URL');
 });
+
+// Setting the app to listen to HTTP requests at the specified port
 
 app.listen(PORT, () => {
   console.log(`Please know that we are listening on port ${PORT}!`);

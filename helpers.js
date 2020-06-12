@@ -1,6 +1,10 @@
+// Generates a random 6-character string for using as IDs
+
 const generateRandomString = () => {
   return Math.random().toString(20).substring(2, 8);
 };
+
+// Creates a new user object and adds it to the user database
 
 const createUser = (id, email, password, userDatabase) => {
   userDatabase[id] = {
@@ -11,6 +15,8 @@ const createUser = (id, email, password, userDatabase) => {
   return userDatabase[id];
 };
 
+// Finds a user in the user database by ID
+
 const findUserById = (user_id, userDatabase) => {
   for (let user in userDatabase) {
     if (userDatabase[user].id === user_id) {
@@ -20,6 +26,8 @@ const findUserById = (user_id, userDatabase) => {
   return false;
 };
 
+// Finds a user in the user database by email
+
 const findUserByEmail = (email, userDatabase) => {
   for (let user in userDatabase) {
     if (userDatabase[user].email === email) {
@@ -28,6 +36,8 @@ const findUserByEmail = (email, userDatabase) => {
   }
   return false;
 };
+
+// Returns an object with the URLs created by the user with the provided ID
 
 const urlsForUser = (id, urlDatabase) => {
   const urlsToShow = {};
