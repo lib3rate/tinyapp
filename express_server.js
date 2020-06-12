@@ -13,7 +13,7 @@ const {
   urlsForUser
 } = require('./helpers');
 
-app.set('view engine', 'ejs')
+app.set('view engine', 'ejs');
 
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieSession({
@@ -27,13 +27,13 @@ const urlDatabase = {
   g9536a: { longURL: "https://www.lighthouselabs.ca", userID: "6e1a50" },
 };
 
-const users = { 
+const users = {
   "Bob": {
     id: "7c2j6a",
     email: "bob@example.com",
     password: bcrypt.hashSync("purple-monkey-dinosaur", 10)
   },
- "John": {
+  "John": {
     id: "20h42g",
     email: "john@example.com",
     password: bcrypt.hashSync("dishwasher-funk", 10)
@@ -75,8 +75,8 @@ app.get('/urls', (req, res) => {
   const userId = req.session.user_id;
   const user = findUserById(userId, users);
   if (!user) {
-   res.send('Please login or register to view the list of URLs');
-   return;
+    res.send('Please login or register to view the list of URLs');
+    return;
   }
   const urlsToShow = urlsForUser(userId, urlDatabase);
   let templateVars = {
@@ -92,8 +92,8 @@ app.get('/urls/new', (req, res) => {
   const userId = req.session.user_id;
   const user = findUserById(userId, users);
   if (!user) {
-    res.redirect('/login')
-  };
+    res.redirect('/login');
+  }
   let templateVars = { user };
   res.render('urls_new', templateVars);
 });
@@ -130,7 +130,7 @@ app.get('/u/:shortURL', (req, res) => {
       return;
     }
   }
-  res.send('The requested URL does not exist')
+  res.send('The requested URL does not exist');
 });
 
 // Registering a new user
@@ -140,14 +140,14 @@ app.post('/register', (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
   if (email === '' || password === '') {
-    res.status(400).send('Email or password are empty')
+    res.status(400).send('Email or password are empty');
   } else if (findUserByEmail(email, users)) {
-    res.status(400).send('User with the provided email is already registered')
+    res.status(400).send('User with the provided email is already registered');
   } else {
     createUser(userId, email, bcrypt.hashSync(password, 10), users);
     req.session.user_id = userId;
     res.redirect('/urls');
-  };
+  }
 });
 
 // Logging an existing user in
@@ -157,14 +157,14 @@ app.post('/login', (req, res) => {
   const password = req.body.password;
   const user = findUserByEmail(email, users);
   if (!user) {
-    res.status(403).send('User with the provided email cannot be found, please register')
+    res.status(403).send('User with the provided email cannot be found, please register');
   } else if (!bcrypt.compareSync(password, user.password)) {
-    res.status(403).send('Passwords do not match')
+    res.status(403).send('Passwords do not match');
   } else {
     const userId = user.id;
     req.session.user_id = userId;
     res.redirect('/urls');
-  };
+  }
 });
 
 // Clearing the cookies and redirecting to the main page with the list of URLs on logout

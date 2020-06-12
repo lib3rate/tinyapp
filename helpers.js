@@ -7,7 +7,7 @@ const createUser = (id, email, password, userDatabase) => {
     id,
     email,
     password,
-  }
+  };
   return userDatabase[id];
 };
 
@@ -45,4 +45,4 @@ module.exports = {
   findUserById,
   findUserByEmail,
   urlsForUser
-}
+};
