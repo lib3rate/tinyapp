@@ -13,7 +13,7 @@ const {
   urlsForUser
 } = require('./helpers');
 
-// Setting the rendering engine to ejs
+// Setting the rendering engine to EJS
 
 app.set('view engine', 'ejs');
 
