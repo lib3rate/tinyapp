@@ -1,8 +1,8 @@
 # TinyApp Project
 
-A single-page Twitter-style web application with responsive design for mobile devices, tablets and laptops or desktop PCs.
+A full stack web application that allows users to shorten long URLs (à la bit.ly).
 
-Front-end: jQuery, HTML, CSS
+Front-end: EJS, Bootstrap
 
 Back-end: Node, Express
 
